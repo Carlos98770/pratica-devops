@@ -10,6 +10,28 @@ Stack conteinerizada de monitoramento que simula um microsserviço HTTP e visual
 - **Grafana** — visualização das métricas em dashboard.
 - **prom-http-simulator** (`pierrevincent/prom-http-simulator`) — simula um microsserviço HTTP, expondo métricas no formato Prometheus.
 
+## Estrutura do projeto
+
+```
+.
+├── docker-compose.yml
+├── grafana
+│   └── provisioning
+│       ├── dashboards
+│       │   ├── dashboard.yml
+│       │   └── simulator-dashboard.json
+│       └── datasources
+│           └── datasource.yml
+├── LICENSE
+├── prometheus
+│   └── prometheus.yml
+├── .env.example
+├── .dockerignore
+├── imgs/
+└── README.md
+
+```
+
 ## Como subir o projeto
 
 Pré-requisitos: Docker e Docker Compose instalados.
@@ -93,26 +115,3 @@ O dashboard reúne os seguintes painéis, cobrindo os sinais essenciais de obser
 ## Dificuldades encontradas e como foram resolvidas
  
 - **Provisionamento automático de dashboard quebrado no Grafana 13.** A ideia inicial era que o dashboard subisse pronto junto com o `docker-compose up`, via provisionamento por arquivo estático. Na prática, isso não funcionou nessa versão do Grafana — o dashboard não era carregado automaticamente. Como contorno, o que deveria ser uma etapa totalmente automática (dashboard já disponível ao subir a stack) ficou como **importação manual**: após o `docker-compose up`, é preciso importar o `simulator-dashboard.json` pela UI (`Dashboards → Import`). Fica registrado aqui como uma limitação conhecida da solução, não como comportamento ideal.
-
-
-## Estrutura do projeto
-
-```
-.
-├── docker-compose.yml
-├── grafana
-│   └── provisioning
-│       ├── dashboards
-│       │   ├── dashboard.yml
-│       │   └── simulator-dashboard.json
-│       └── datasources
-│           └── datasource.yml
-├── LICENSE
-├── prometheus
-│   └── prometheus.yml
-├── .env.example
-├── .dockerignore
-├── imgs/
-└── README.md
-
-```
