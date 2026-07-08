@@ -6,4 +6,4 @@ providers:
     type: file
 
     options:
-      path: /var/lib/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards
