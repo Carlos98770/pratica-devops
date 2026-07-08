@@ -16,20 +16,19 @@ Stack conteinerizada de monitoramento que simula um microsserviço HTTP e visual
 .
 ├── docker-compose.yml
 ├── grafana
-│   └── provisioning
-│       ├── dashboards
-│       │   ├── dashboard.yml
-│       │   └── simulator-dashboard.json
-│       └── datasources
-│           └── datasource.yml
+│   └── provisioning
+│       ├── dashboards
+│       │   ├── dashboard.yml
+│       │   └── simulator-dashboard.json
+│       └── datasources
+│           └── datasource.yml
 ├── LICENSE
 ├── prometheus
-│   └── prometheus.yml
+│   └── prometheus.yml
 ├── .env.example
 ├── .dockerignore
 ├── imgs/
 └── README.md
-
 ```
 
 ## Como subir o projeto
@@ -42,7 +41,7 @@ git clone <url-do-repositorio>
 cd <pasta-do-projeto>
 ```
 
-2. Crie um arquivo `.env` na raiz com as variáveis necessárias:
+2. Crie um arquivo `.env` na raiz com as variáveis necessárias (pode copiar de `.env.example`):
 ```env
 SIMULATOR_CONTAINER_NAME=simulator
 PROMETHEUS_CONTAINER_NAME=prometheus
@@ -63,11 +62,9 @@ docker-compose up -d
 
 ## Como visualizar o dashboard
 
-1. No Grafana, vá em **Dashboards → New → Import**.
-2. Faça upload do arquivo `grafana/dashboards/simulator-dashboard.json` (ou cole o conteúdo do JSON).
-3. Na tela de importação, selecione o datasource **Prometheus** quando solicitado.
-4. O dashboard será criado com os painéis de status da API, taxa de requisições, taxa de erro, latência e distribuição de status code.
+O dashboard é provisionado automaticamente ao subir a stack — não é necessário importar nada manualmente. Após rodar `docker-compose up -d`, acesse o Grafana e vá em **Dashboards → Dashboard Metricas**.
 
+> Pode levar alguns instantes para o Grafana terminar de indexar e exibir o dashboard logo após a stack subir — se ele não aparecer de imediato, aguarde alguns segundos e atualize a página.
 
 ## Decisões técnicas
 
@@ -78,6 +75,10 @@ Optei por configurar o scrape diretamente no `prometheus.yml`, apontando para o 
 - O `prom-http-simulator` já expõe as métricas nativamente no formato Prometheus (endpoint `/metrics`), então não há necessidade de um agente de coleta/transformação entre a fonte e o Prometheus — o scrape direto já resolve o pipeline com uma peça a menos.
 - Para o escopo do desafio (uma única fonte de métricas, ambiente local), adicionar o Alloy introduziria uma camada extra de configuração e um ponto a mais de falha, sem ganho prático imediato. O Alloy se justifica mais em cenários com múltiplas fontes heterogêneas de telemetria (logs, traces, métricas de fontes não nativas do Prometheus) ou pipelines de transformação/roteamento mais complexos, que não é o caso aqui.
 - Manter o pipeline simples (simulator → Prometheus → Grafana) facilita a reprodução do ambiente por qualquer pessoa avaliando o desafio, sem exigir conhecimento prévio de Alloy.
+
+### Provisionamento automático de datasource e dashboard
+
+Tanto o datasource do Prometheus quanto o dashboard são provisionados automaticamente via arquivos de configuração (`grafana/provisioning/datasources/datasource.yml` e `grafana/provisioning/dashboards/dashboard.yml` + `simulator-dashboard.json`), montados como volume no container do Grafana. Isso garante que a stack suba com o dashboard já pronto, sem etapas manuais, e que o ambiente seja idêntico em qualquer máquina que rode o projeto.
 
 ### Healthchecks
 
@@ -113,5 +114,5 @@ O dashboard reúne os seguintes painéis, cobrindo os sinais essenciais de obser
 <img src="imgs/image.png">
 
 ## Dificuldades encontradas e como foram resolvidas
- 
-- **Provisionamento automático de dashboard quebrado no Grafana 13.** A ideia inicial era que o dashboard subisse pronto junto com o `docker-compose up`, via provisionamento por arquivo estático. Na prática, isso não funcionou nessa versão do Grafana — o dashboard não era carregado automaticamente. Como contorno, o que deveria ser uma etapa totalmente automática (dashboard já disponível ao subir a stack) ficou como **importação manual**: após o `docker-compose up`, é preciso importar o `simulator-dashboard.json` pela UI (`Dashboards → Import`). Fica registrado aqui como uma limitação conhecida da solução, não como comportamento ideal.
+
+- **Caminho de provisionamento incorreto.** O provider de dashboards estava configurado para procurar os arquivos em um caminho que não correspondia ao volume montado no container, fazendo com que o Grafana não encontrasse o dashboard ao subir a stack. Identificado ao inspecionar os logs do container (`docker compose logs grafana`), que apontavam explicitamente o diretório que estava sendo procurado. Corrigido ajustando o `path` no `dashboard.yml` para o caminho correto dentro do container, o que resolveu o provisionamento automático por completo.
